@@ -1,10 +1,10 @@
-// using vite, we can write our code with URLs that simply read /api/v2/xxx and
-// vite will proxy them to whichever server is configured in vite.config.js,
+// using vite, we can write our code with URLs that simply read
+// /api/v2/xxx
+// and vite will proxy them to whichever server is configured in vite.config.js,
 // which is currently set to https://pixels-war.fly.dev
 // so there's essentially no need for a global variable with the server URL..
-// const PREFIX = `/api/v2/${MAP_ID}`
 
-// it's probably wise to start with the test map
+// also note that it's probably wise to start with the TEST map
 
 document.addEventListener("DOMContentLoaded",
     async () => {

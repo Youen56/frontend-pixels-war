@@ -13,37 +13,100 @@ The difficulty of the game lies in the fact that a player can only change the
 color of a pixel every 10 seconds, which makes strategy and planning essential
 for success.
 
-## The API
+## The server
 
-The API is accessible at `https://pixels-war.fly.dev`, where you will find:
+The game is accessible at `https://pixels-war.fly.dev`, where you will find:
 
 - at the root, a frontend that looks like what you need to make  
   https://pixels-war.fly.dev/
 
-- the online documentation (courtesy FastAPI) here:  
+- an API that implements the game logic, and that you will have to leverage to
+  build your own frontend  
+  the API online documentation (courtesy FastAPI) here:  
   https://pixels-war.fly.dev/docs
 
   for historical reasons there are two versions of the API that are
   documented, but **only version `v2` should be used**, version `v1` is
   obsolete and non-functional
 
-## The Maps
+## The frontend
 
-As you can see on the frontend, there are several maps you can work on:
+Essentially the frontend allows you to
+- choose a backend server; in your own implementation you should skip this part; it's OK that your own app can talk only to one server, it makes things easier with respect to CORS issues, more on this in the section on using `vite` below
+- choose a map among those available at the server
+- display the selected map (button 'Display')
+- choose a color for the next pixel
+- click on a pixel to change its color (if the timeout allows it)
+- and otherwise continuously see changes made by other users
+
+## The maps
+
+Each server hosts several maps:
 - specifically for your development, we recommend using the `TEST` map
   which has a timeout of 1 second, which is more comfortable for
-  development than the other maps which have longer timeouts.
-- the main `MAIN` map has a timeout of 10 seconds, and this is the
-  map where the final competition takes place
+  development than the other maps which have longer timeouts
 - we have also created a map per group, if that can be useful
+- the `MAIN` map is the one where the final competition takes place - tentatively
 
-## Your Job
+## Your job
 
 You are to write your own frontend; you can start from scratch, or be inspired
-by the frontend provided in this repository, which will guide you further; in
-that case, look at the TODOs in the js, then in the css.
+by the starter code provided in this repository, which will guide you further;
+in that case, look at the TODOs in the js, then in the css.
 
-### using vite to work around any CORS issue
+Again note that
+
+- the starter code already has the logic to probe the server for its list of
+  maps
+- the starter code has no dialog to choose a server; it's OK that your final
+  code can only talk to one server, and in fact this is recommended to avoid
+  CORS issues
+
+## `fetch()`: hints about passing parameters to the API
+
+You will need to pass parameters to the API, through your calls to `fetch()`  
+Here are a few tips about that (and feel free to look around for more):
+
+- in order to add a header to your request, you can do as follows:
+
+```js
+fetch('/api/v2/xxx', {
+  method: 'POST', // or 'GET' or whatever
+  headers: {
+    'API-KEY': 'your-api-key'
+  },
+})
+```
+
+- in order to pass a JSON body to a POST request, you can do as follows:
+
+```js
+fetch('/api/v2/xxx', {
+  method: 'POST',
+  body: JSON.stringify({
+    'key1': 'value1',
+    'key2': 'value2'
+  })
+})
+```
+
+- in order to pass along any cookie that the server has set, you need to add the `credentials` option as follows:
+
+```js
+fetch('/api/v2/xxx', {
+  method: 'POST',
+  credentials: 'include'
+})
+```
+
+- also there are no query parameters in the API, so no worries about that
+
+See also
+<https://backend.info-mines.paris/fastapi-basics/#more-kinds-of-parameters> for
+a picture about how these various kinds of parameters end up in the actual HTTP
+request.
+
+## Using `vite` to work around any CORS issue
 
 In order to deal with CORS issues, we recommend using `vite` to serve your
 frontend; the repo contains a `vite.config.js` file that is configured to proxy
@@ -54,23 +117,33 @@ npm install vite
 npx vite
 ```
 
-and then open `http://localhost:5173/pixels-war.html` (or another port, as
+and then open <http://localhost:5173/pixels-war.html> (or another port, as
 instructed in the output of vite) in your browser to see the frontend.
 
 Like always, this terminal is then unusable, as it is occupied by the vite
 server, so you will need to open another terminal if need be.
 
+This means your code will **exclusively issue requests to `/api/v2/xxx`**  
+i.e. **with no https://pixels-war.fly.dev prefix**,  
+and vite will take care of proxying them to the server  
+which is configured in `vite.config.js` as `https://pixels-war.fly.dev`.
+
 Here's how it works
 
 ![](vite.excalidraw.svg)
 
+See also https://frontend.info-mines.paris/vite-nb/ for how to install and use
+vite in general.
+
 ## Deployment notes
 
-FYI, the server is written in Python using FastAPI; it is deliberately, and in
-particular it does not support persistence, meaning that when the server
-restarts, all the data is lost.  
+FYI, the server is written in Python using FastAPI; it is deliberately simple
+and rustic, and in particular it does not support persistence, meaning that when
+the server restarts, all the data is lost.  
 Also, as this server is hosted on `fly.io`, it is configured to shutdown itself
 down after some inactivity, and restart when a new request arrives.  
 This means that if you leave the server alone for a while, it will shutdown, and
-the next request will trigger a restart, which will (1) restart the maps from
-the predefined configuration, causing, and (2) need a delay of about 10 seconds.
+the next request will trigger a restart, which will
+
+1. restart the maps from the predefined configuration,
+2. and need a delay of about 10 seconds before it can respond to the first request
